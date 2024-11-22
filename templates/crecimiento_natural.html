@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crecimiento Natural</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #grafico-container {
+            width: 100%;
+            height: 500px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Consulta de Crecimiento Natural</h1>
+
+    <a href="/" class="volver-inicio">Volver al inicio</a>
+
+    <!-- Formulario para seleccionar el modo y el filtro -->
+    <form id="consultar-form">
+        <label for="modo">Selecciona el modo de consulta:</label>
+        <select id="modo" required>
+            <option value="pais">Por país</option>
+            <option value="anio">Por año</option>
+        </select>
+
+        <div id="pais-container">
+            <label for="pais">Selecciona un país:</label>
+            <select id="pais" required>
+                <option value="" disabled selected>-- Selecciona un país --</option>
+                {% for pais in paises %}
+                <option value="{{ pais }}">{{ pais }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="anio-container" style="display:none;">
+            <label for="anio">Selecciona un año:</label>
+            <select id="anio" required>
+                <option value="" disabled selected>-- Selecciona un año --</option>
+                {% for anio in anios %}
+                <option value="{{ anio }}">{{ anio }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Consultar</button>
+    </form>
+
+    <!-- Contenedor para el gráfico -->
+    <div id="grafico-container"></div>
+
+    <script>
+        document.getElementById('modo').addEventListener('change', function () {
+            const modo = this.value;
+            document.getElementById('pais-container').style.display = modo === 'pais' ? 'block' : 'none';
+            document.getElementById('anio-container').style.display = modo === 'anio' ? 'block' : 'none';
+        });
+
+        document.getElementById('consultar-form').addEventListener('submit', async function (event) {
+            event.preventDefault(); // Evitar recargar la página
+
+            const modo = document.getElementById('modo').value;
+            let url = '/crecimiento/grafico';
+            let bodyData = {};
+
+            if (modo === 'pais') {
+                const pais = document.getElementById('pais').value;
+                bodyData = { pais };
+            } else {
+                const anio = document.getElementById('anio').value;
+                bodyData = { anio };
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bodyData),
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    Plotly.newPlot('grafico-container', data.data, data.layout);
+                }
+            } catch (error) {
+                console.error('Error al consultar el gráfico:', error);
+                alert('Ocurrió un error al consultar los datos.');
+            }
+        });
+    </script>
+</body>
+</html>

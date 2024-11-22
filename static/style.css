@@ -1,0 +1,92 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url('/static/background.gif') no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+header {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    width: 100%;
+    padding: 1rem 0;
+    text-align: center;
+    position: absolute;
+    top: 0;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}
+
+section {
+    width: 30%;
+    border-radius: 5px;
+    text-align: center;
+    overflow: hidden; /* Para evitar desbordamiento en el zoom */
+}
+
+section a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: white;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    min-height: 150px; /* Altura mínima uniforme */
+}
+
+section a:hover {
+    transform: scale(1.1); /* Zoom en el botón */
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.5); /* Sombra más pronunciada */
+}
+
+footer {
+    text-align: center;
+    padding: 1rem 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+#grafico-container {
+    margin-top: 2rem;
+    width: 80%;
+    max-width: 800px;
+    border: 1px solid white;
+    padding: 1rem;
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.volver-inicio {
+    position: fixed;
+    bottom: 20px; /* Distancia desde el borde inferior */
+    left: 20px; /* Distancia desde el borde izquierdo */
+    background-color: #007BFF; /* Color de fondo */
+    color: white; /* Color del texto */
+    padding: 10px 20px; /* Espaciado del botón */
+    text-decoration: none; /* Eliminar el subrayado */
+    border-radius: 5px; /* Bordes redondeados */
+    font-size: 16px; /* Tamaño de fuente */
+}
+
+.volver-inicio:hover {
+    background-color: #0056b3; /* Cambio de color al pasar el ratón */
+}
+
