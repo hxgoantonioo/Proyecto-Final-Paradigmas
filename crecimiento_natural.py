@@ -1,91 +1,108 @@
 import pandas as pd
 from flask import Blueprint, jsonify, request, render_template
+import glob
 
-crecimiento_bp = Blueprint("crecimiento", __name__, template_folder="templates")
+class CrecimientoNatural:
+    def __init__(self, csv_path):
+        self.data = pd.read_csv(csv_path)
 
-# Ruta al archivo CSV
-CSV_PATH = "data/births-and-deaths.csv"
-data = pd.read_csv(CSV_PATH)
+        # Filtrar datos
+        self.data = self.data[self.data["Code"] != "REG"]  # Eliminar regiones
+        self.data = self.data[self.data["Code"] != "OWID_WRL"]  # Eliminar conteo mundial
 
-# Filtrar filas donde 'Code' no sea 'REG' (por regiones)
-data = data[data["Code"] != "REG"]
+        # Calcular el crecimiento natural y agregarlo como columna
+        self.data["Growth"] = self.data["Births"] - self.data["Deaths"]
 
-# Filtrar filas donde 'Code' no sea 'OWID_WRL' (por conteo mundial)
-crecimiento_data = data[data["Code"] != "OWID_WRL"]
+        # Crear subconjuntos de datos
+        self.crecimiento_data_full = self.data[["Entity", "Year", "Growth"]]
 
-crecimiento_data_full = data[["Entity", "Year", "Births", "Deaths"]]  # Para mantener datos completos
+    def obtener_paises(self):
+        """Devuelve la lista de países únicos en orden alfabético."""
+        return sorted(self.data["Entity"].unique())
+
+    def obtener_anios(self):
+        """Devuelve la lista de años únicos en orden ascendente."""
+        return sorted(self.data["Year"].unique())
+
+    def filtrar_por_pais(self, pais):
+        """Filtra los datos por país."""
+        return self.crecimiento_data_full[self.crecimiento_data_full["Entity"] == pais]
+
+    def filtrar_por_anio(self, anio):
+        """Filtra los datos por año."""
+        return self.crecimiento_data_full[self.crecimiento_data_full["Year"] == int(anio)]
+
+
+# Crear un objeto para manejar los datos de crecimiento natural
+csv_files = glob.glob('**/births-and-deaths.csv', recursive=True)
+csv_path = csv_files[0]
+crecimiento_manager = CrecimientoNatural(csv_path)
+
+# Crear el Blueprint de Flask
+crecimiento_bp = Blueprint("crecimiento_natural", __name__, template_folder="templates")
 
 @crecimiento_bp.route('/crecimiento', methods=['GET'])
 def crecimiento():
-    paises = sorted(crecimiento_data["Entity"].unique())
-    anios = sorted(crecimiento_data["Year"].unique())
+    """Renderiza la página principal de consulta de crecimiento natural."""
+    paises = crecimiento_manager.obtener_paises()
+    anios = crecimiento_manager.obtener_anios()
     return render_template('crecimiento_natural.html', paises=paises, anios=anios)
 
 @crecimiento_bp.route('/crecimiento/grafico', methods=['POST'])
 def crecimiento_grafico():
+    """Devuelve los datos del gráfico según el país o año seleccionado."""
     content = request.get_json()
     pais = content.get("pais")
     anio = content.get("anio")
 
     if pais:
-        # Filtrar datos por país
-        filtered_data = crecimiento_data_full[crecimiento_data_full["Entity"] == pais]
+        filtered_data = crecimiento_manager.filtrar_por_pais(pais)
         if filtered_data.empty:
             return jsonify({"error": f"No hay datos disponibles para {pais}."}), 404
 
-        # Calcular el crecimiento natural (births - deaths)
-        filtered_data["Crecimiento Natural"] = filtered_data["Births"] - filtered_data["Deaths"]
-
         years = filtered_data["Year"].tolist()
-        crecimiento_natural = filtered_data["Crecimiento Natural"].tolist()
+        growth = filtered_data["Growth"].tolist()
 
-        # Crear los datos del gráfico para el país
         graph_data = {
             "data": [
                 {
                     "x": years,
-                    "y": crecimiento_natural,
+                    "y": growth,
                     "type": "scatter",
                     "mode": "lines+markers",
-                    "name": f"Crecimiento Natural en {pais}",
-                    "line": {"color": "green"},
+                    "name": f"Crecimiento natural en {pais}",
+                    "line": {"color": "sky blue"},
                 }
             ],
             "layout": {
-                "title": f"Crecimiento Natural en {pais} a lo largo del tiempo",
+                "title": f"Crecimiento natural de {pais} a lo largo del tiempo",
                 "xaxis": {"title": "Año"},
-                "yaxis": {"title": "Crecimiento Natural (Births - Deaths)"},
+                "yaxis": {"title": "Crecimiento natural (Nacimientos - Muertes)"},
             },
         }
     elif anio:
-        # Filtrar datos por año y calcular crecimiento natural
-        filtered_data = crecimiento_data_full[crecimiento_data_full["Year"] == int(anio)]
+        filtered_data = crecimiento_manager.filtrar_por_anio(anio)
         if filtered_data.empty:
             return jsonify({"error": f"No hay datos disponibles para el año {anio}."}), 404
 
-        # Calcular el crecimiento natural (births - deaths)
-        filtered_data["Crecimiento Natural"] = filtered_data["Births"] - filtered_data["Deaths"]
-
-        sorted_data = filtered_data.sort_values("Crecimiento Natural", ascending=False)
-
-        # Crear los datos del gráfico para los países por año
+        sorted_data = filtered_data.sort_values("Growth", ascending=False)
         countries = sorted_data["Entity"].tolist()
-        crecimiento_natural = sorted_data["Crecimiento Natural"].tolist()
+        growth = sorted_data["Growth"].tolist()
 
         graph_data = {
             "data": [
                 {
                     "x": countries,
-                    "y": crecimiento_natural,
+                    "y": growth,
                     "type": "bar",
-                    "name": f"Crecimiento Natural en {anio}",
-                    "marker": {"color": "green"},
+                    "name": f"Crecimiento natural en {anio}",
+                    "marker": {"color": "sky blue"},
                 }
             ],
             "layout": {
-                "title": f"Crecimiento Natural por países en {anio}",
+                "title": f"Crecimiento natural por países en {anio}",
                 "xaxis": {"title": "País"},
-                "yaxis": {"title": "Crecimiento Natural (Births - Deaths)"},
+                "yaxis": {"title": "Crecimiento natural (Nacimientos - Muertes)"},
             },
         }
     else:

@@ -1,39 +1,60 @@
 import pandas as pd
 from flask import Blueprint, jsonify, request, render_template
+import glob
 
+class Natalidad:
+    def __init__(self, csv_path):
+        self.data = pd.read_csv(csv_path)
+
+        # Filtrar datos
+        self.data = self.data[self.data["Code"] != "REG"]  # Eliminar regiones
+        self.natalidad_data = self.data[self.data["Code"] != "OWID_WRL"]  # Eliminar conteo mundial
+        self.natalidad_data_full = self.data[["Entity", "Year", "Births"]]
+
+    def obtener_paises(self):
+        """Devuelve la lista de países únicos en orden alfabético."""
+        return sorted(self.natalidad_data["Entity"].unique())
+
+    def obtener_anios(self):
+        """Devuelve la lista de años únicos en orden ascendente."""
+        return sorted(self.natalidad_data["Year"].unique())
+
+    def filtrar_por_pais(self, pais):
+        """Filtra los datos por país."""
+        return self.natalidad_data_full[self.natalidad_data_full["Entity"] == pais]
+
+    def filtrar_por_anio(self, anio):
+        """Filtra los datos por año."""
+        return self.natalidad_data[self.natalidad_data["Year"] == int(anio)]
+
+
+# Crear un objeto para manejar los datos de natalidad
+csv_files = glob.glob('**/births-and-deaths.csv', recursive=True)
+csv_path = csv_files[0]
+natalidad_manager = Natalidad(csv_path)
+
+# Crear el Blueprint de Flask
 natalidad_bp = Blueprint("natalidad", __name__, template_folder="templates")
-
-# Ruta al archivo CSV
-CSV_PATH = "data/births-and-deaths.csv"
-data = pd.read_csv(CSV_PATH)
-
-# Filtrar filas donde 'Code' no sea 'REG' (por regiones)
-data = data[data["Code"] != "REG"]
-
-# Filtrar filas donde 'Code' no sea 'OWID_WRL' (por conteo mundial)
-natalidad_data = data[data["Code"] != "OWID_WRL"]
-
-natalidad_data_full = data[["Entity", "Year", "Births"]]  # Para mantener datos completos
 
 @natalidad_bp.route('/natalidad', methods=['GET'])
 def natalidad():
-    paises = sorted(natalidad_data["Entity"].unique())
-    anios = sorted(natalidad_data["Year"].unique())
+    """Renderiza la página principal de consulta de natalidad."""
+    paises = natalidad_manager.obtener_paises()
+    anios = natalidad_manager.obtener_anios()
     return render_template('natalidad.html', paises=paises, anios=anios)
 
 @natalidad_bp.route('/natalidad/grafico', methods=['POST'])
 def natalidad_grafico():
+    """Devuelve los datos del gráfico según el país o año seleccionado."""
     content = request.get_json()
     pais = content.get("pais")
     anio = content.get("anio")
 
     if pais:
-        # Filtrar datos por país
-        filtered_data = natalidad_data_full[natalidad_data_full["Entity"] == pais]
+        filtered_data = natalidad_manager.filtrar_por_pais(pais)
         if filtered_data.empty:
             return jsonify({"error": f"No hay datos disponibles para {pais}."}), 404
 
-        # Crear los datos del gráfico para el país
         years = filtered_data["Year"].tolist()
         births = filtered_data["Births"].tolist()
 
@@ -45,7 +66,7 @@ def natalidad_grafico():
                     "type": "scatter",
                     "mode": "lines+markers",
                     "name": f"Tasas de natalidad en {pais}",
-                    "line": {"color": "blue"},
+                    "line": {"color": "green"},
                 }
             ],
             "layout": {
@@ -55,14 +76,11 @@ def natalidad_grafico():
             },
         }
     elif anio:
-        # Filtrar datos por año y ordenar por nacimientos, sin contar "OWID_WRL"
-        filtered_data = natalidad_data[natalidad_data["Year"] == int(anio)]
+        filtered_data = natalidad_manager.filtrar_por_anio(anio)
         if filtered_data.empty:
             return jsonify({"error": f"No hay datos disponibles para el año {anio}."}), 404
 
         sorted_data = filtered_data.sort_values("Births", ascending=False)
-
-        # Crear los datos del gráfico para los países por año
         countries = sorted_data["Entity"].tolist()
         births = sorted_data["Births"].tolist()
 
@@ -73,7 +91,7 @@ def natalidad_grafico():
                     "y": births,
                     "type": "bar",
                     "name": f"Natalidad en {anio}",
-                    "marker": {"color": "blue"},
+                    "marker": {"color": "green"},
                 }
             ],
             "layout": {
