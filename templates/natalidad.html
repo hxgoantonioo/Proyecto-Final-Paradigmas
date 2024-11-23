@@ -24,7 +24,6 @@
 
     <a href="/" class="volver-inicio">Volver al inicio</a>
 
-    <!-- Formulario para seleccionar el modo y el filtro -->
     <form id="consultar-form">
         <label for="modo">Selecciona el modo de consulta:</label>
         <select id="modo" required>
@@ -55,7 +54,6 @@
         <button type="submit">Consultar</button>
     </form>
 
-    <!-- Contenedor para el gráfico -->
     <div id="grafico-container"></div>
 
     <script>
@@ -66,10 +64,10 @@
         });
 
         document.getElementById('consultar-form').addEventListener('submit', async function (event) {
-            event.preventDefault(); // Evitar recargar la página
+            event.preventDefault();
 
             const modo = document.getElementById('modo').value;
-            let url = '/natalidad/grafico';  // Cambié la URL a natalidad
+            let url = '/natalidad/grafico';
             let bodyData = {};
 
             if (modo === 'pais') {

@@ -32,7 +32,7 @@ section {
     width: 30%;
     border-radius: 5px;
     text-align: center;
-    overflow: hidden; /* Para evitar desbordamiento en el zoom */
+    overflow: hidden;
 }
 
 section a {
@@ -46,12 +46,12 @@ section a {
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    min-height: 150px; /* Altura mínima uniforme */
+    min-height: 150px;
 }
 
 section a:hover {
-    transform: scale(1.1); /* Zoom en el botón */
-    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.5); /* Sombra más pronunciada */
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.5);
 }
 
 footer {
@@ -76,17 +76,17 @@ footer {
 
 .volver-inicio {
     position: fixed;
-    bottom: 20px; /* Distancia desde el borde inferior */
-    left: 20px; /* Distancia desde el borde izquierdo */
-    background-color: #007BFF; /* Color de fondo */
-    color: white; /* Color del texto */
-    padding: 10px 20px; /* Espaciado del botón */
-    text-decoration: none; /* Eliminar el subrayado */
-    border-radius: 5px; /* Bordes redondeados */
-    font-size: 16px; /* Tamaño de fuente */
+    bottom: 20px;
+    left: 20px;
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
 }
 
 .volver-inicio:hover {
-    background-color: #0056b3; /* Cambio de color al pasar el ratón */
+    background-color: #0056b3;
 }
 

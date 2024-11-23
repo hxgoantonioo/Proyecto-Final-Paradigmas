@@ -5,35 +5,26 @@ import glob
 class Natalidad:
     def __init__(self, csv_path):
         self.data = pd.read_csv(csv_path)
-
-        # Filtrar datos
-        self.data = self.data[self.data["Code"] != "REG"]  # Eliminar regiones
-        self.natalidad_data = self.data[self.data["Code"] != "OWID_WRL"]  # Eliminar conteo mundial
+        self.data = self.data[self.data["Code"] != "REG"]
+        self.natalidad_data = self.data[self.data["Code"] != "OWID_WRL"]
         self.natalidad_data_full = self.data[["Entity", "Year", "Births"]]
 
     def obtener_paises(self):
-        """Devuelve la lista de países únicos en orden alfabético."""
         return sorted(self.natalidad_data["Entity"].unique())
 
     def obtener_anios(self):
-        """Devuelve la lista de años únicos en orden ascendente."""
         return sorted(self.natalidad_data["Year"].unique())
 
     def filtrar_por_pais(self, pais):
-        """Filtra los datos por país."""
         return self.natalidad_data_full[self.natalidad_data_full["Entity"] == pais]
 
     def filtrar_por_anio(self, anio):
-        """Filtra los datos por año."""
         return self.natalidad_data[self.natalidad_data["Year"] == int(anio)]
 
-
-# Crear un objeto para manejar los datos de natalidad
 csv_files = glob.glob('**/births-and-deaths.csv', recursive=True)
 csv_path = csv_files[0]
 natalidad_manager = Natalidad(csv_path)
 
-# Crear el Blueprint de Flask
 natalidad_bp = Blueprint("natalidad", __name__, template_folder="templates")
 
 @natalidad_bp.route('/natalidad', methods=['GET'])

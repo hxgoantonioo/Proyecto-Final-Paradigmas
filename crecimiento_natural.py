@@ -5,40 +5,27 @@ import glob
 class CrecimientoNatural:
     def __init__(self, csv_path):
         self.data = pd.read_csv(csv_path)
-
-        # Filtrar datos
-        self.data = self.data[self.data["Code"] != "REG"]  # Eliminar regiones
-        self.data = self.data[self.data["Code"] != "OWID_WRL"]  # Eliminar conteo mundial
-
-        # Calcular el crecimiento natural y agregarlo como columna
+        self.data = self.data[self.data["Code"] != "REG"]
+        self.data = self.data[self.data["Code"] != "OWID_WRL"]
         self.data["Growth"] = self.data["Births"] - self.data["Deaths"]
-
-        # Crear subconjuntos de datos
         self.crecimiento_data_full = self.data[["Entity", "Year", "Growth"]]
 
     def obtener_paises(self):
-        """Devuelve la lista de países únicos en orden alfabético."""
         return sorted(self.data["Entity"].unique())
 
     def obtener_anios(self):
-        """Devuelve la lista de años únicos en orden ascendente."""
         return sorted(self.data["Year"].unique())
 
     def filtrar_por_pais(self, pais):
-        """Filtra los datos por país."""
         return self.crecimiento_data_full[self.crecimiento_data_full["Entity"] == pais]
 
     def filtrar_por_anio(self, anio):
-        """Filtra los datos por año."""
         return self.crecimiento_data_full[self.crecimiento_data_full["Year"] == int(anio)]
 
-
-# Crear un objeto para manejar los datos de crecimiento natural
 csv_files = glob.glob('**/births-and-deaths.csv', recursive=True)
 csv_path = csv_files[0]
 crecimiento_manager = CrecimientoNatural(csv_path)
 
-# Crear el Blueprint de Flask
 crecimiento_bp = Blueprint("crecimiento_natural", __name__, template_folder="templates")
 
 @crecimiento_bp.route('/crecimiento', methods=['GET'])
